@@ -7,12 +7,11 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY --chown=node:node package.json pnpm-lock.yaml .
+COPY --chown=node:node . .
 RUN pnpm install --frozen-lockfile
 
 ENV NODE_ENV=production
-COPY --chown=node:node . .
-RUN pnpm build && \
+RUN pnpm -r build && \
     pnpm prune --prod
 
 #! Production #1 (244MB)
@@ -21,13 +20,16 @@ RUN pnpm build && \
 # USER node
 # WORKDIR /app
 # ENV NODE_ENV=production
+# ARG repo
 # EXPOSE 3000
 
-# COPY --chown=node:node --from=build /usr/bin/tini /app/out .
-# COPY --chown=node:node --from=build /app/node_modules node_modules
+# COPY --chown=node:node --from=build /usr/bin/tini /usr/bin/tini
+# COPY --chown=node:node --from=build /app .
 
-# ENTRYPOINT ["./tini"]
-# CMD ["node", "main.js"]
+# WORKDIR $repo
+
+# ENTRYPOINT ["tini"]
+# CMD ["node", "dist"]
 
 #! Production #2 (163MB)
 FROM gcr.io/distroless/nodejs18
@@ -35,10 +37,13 @@ FROM gcr.io/distroless/nodejs18
 USER 1000
 WORKDIR /app
 ENV NODE_ENV=production
+ARG repo
 EXPOSE 3000
 
-COPY --chown=1000:1000 --from=build /usr/bin/tini /app/out .
-COPY --chown=1000:1000 --from=build /app/node_modules node_modules
+COPY --chown=node:node --from=build /usr/bin/tini /usr/bin/tini
+COPY --chown=1000:1000 --from=build /app .
 
-ENTRYPOINT ["./tini"]
-CMD ["/nodejs/bin/node", "main.js"]
+WORKDIR $repo
+
+ENTRYPOINT ["tini"]
+CMD ["/nodejs/bin/node", "dist"]
