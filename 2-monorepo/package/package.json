@@ -6,7 +6,6 @@
     "scripts": {
         "build": "tsc"
     },
-    "license": "ISC",
     "devDependencies": {
         "@types/node": "^18.15.11",
         "@types/pg": "^8.6.6",
